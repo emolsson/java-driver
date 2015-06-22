@@ -18,6 +18,7 @@ package com.datastax.driver.core.querybuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.TableMetadata;
 
 /**
@@ -56,7 +57,7 @@ public class Delete extends BuiltStatement {
 
         builder.append("DELETE");
         if (columnNames != null)
-            Utils.joinAndAppendNames(builder.append(" "), ",", columnNames);
+            Utils.joinAndAppendNames(builder.append(" "), getCodecRegistry(), ",", columnNames);
 
         builder.append(" FROM ");
         if (keyspace != null)
@@ -64,12 +65,12 @@ public class Delete extends BuiltStatement {
         Utils.appendName(table, builder);
         if (!usings.usings.isEmpty()) {
             builder.append(" USING ");
-            Utils.joinAndAppend(builder, " AND ", usings.usings, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", usings.usings, variables);
         }
 
         if (!where.clauses.isEmpty()) {
             builder.append(" WHERE ");
-            Utils.joinAndAppend(builder, " AND ", where.clauses, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", where.clauses, variables);
         }
 
         if (ifExists) {
@@ -78,7 +79,7 @@ public class Delete extends BuiltStatement {
 
         if (!conditions.conditions.isEmpty()) {
             builder.append(" IF ");
-            Utils.joinAndAppend(builder, " AND ", conditions.conditions, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", conditions.conditions, variables);
         }
 
         return builder;
@@ -360,7 +361,8 @@ public class Delete extends BuiltStatement {
             StringBuilder sb = new StringBuilder();
             Utils.appendName(columnName, sb);
             sb.append('[');
-            Utils.appendValue(key, sb);
+            // FIXME use configured codec registry, see JAVA-679
+            Utils.appendValue(key, new CodecRegistry(), sb, null);
             return column(sb.append(']').toString());
         }
     }

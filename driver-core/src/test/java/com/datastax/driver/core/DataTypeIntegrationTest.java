@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.collect.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +62,16 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
         return statements;
     }
 
+    @AfterClass
+    @Override
+    public void afterClass() {
+        // drop tables one by one to avoid a timeout when issuing the DROP KEYSPACE statement
+        for (TestTable table : tables) {
+            session.execute("DROP TABLE " + table.tableName);
+        }
+        super.afterClass();
+    }
+
     @Test(groups = "long")
     public void should_insert_and_retrieve_data_with_legacy_statements() {
         should_insert_and_retrieve_data(StatementType.RAW_STRING);
@@ -79,14 +90,17 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
 
     protected void should_insert_and_retrieve_data(StatementType statementType) {
         ProtocolVersion protocolVersion = cluster.getConfiguration().getProtocolOptions().getProtocolVersion();
+        CodecRegistry codecRegistry = cluster.getConfiguration().getCodecRegistry();
 
         for (TestTable table : tables) {
             if (cassandraVersion.compareTo(table.minCassandraVersion) < 0)
                 continue;
 
+            TypeCodec<Object> codec = codecRegistry.codecFor(table.testColumnType);
             switch (statementType) {
                 case RAW_STRING:
-                    session.execute(table.insertStatement.replace("?", table.testColumnType.format(table.sampleValue)));
+                    String query = table.insertStatement.replace("?", codec.format(table.sampleValue));
+                    session.execute(query);
                     break;
                 case SIMPLE_WITH_PARAM:
                     session.execute(table.insertStatement, table.sampleValue);
@@ -100,7 +114,7 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
             }
 
             Row row = session.execute(table.selectStatement).one();
-            Object queriedValue = table.testColumnType.deserialize(row.getBytesUnsafe("v"), protocolVersion);
+            Object queriedValue = codec.deserialize(row.getBytesUnsafe("v"), protocolVersion);
 
             assertThat(queriedValue)
                 .as("Test failure on %s statement with table:%n%s;%n" +
@@ -249,7 +263,7 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
 
         int typeIdx = type.getTypeArguments().size() > 1 ? 1 : 0;
         DataType argument = type.getTypeArguments().get(typeIdx);
-        boolean isAtBottom = !argument.isCollection();
+        boolean isAtBottom = !(argument instanceof DataType.CollectionType);
 
         if(isAtBottom) {
             switch(type.getName()) {
@@ -334,6 +348,7 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
 
     private Object getBoundValue(BoundStatement bs, DataType dataType) {
         // This is kind of lame, but better than testing all getters manually
+        CodecRegistry codecRegistry = cluster.getConfiguration().getCodecRegistry();
         switch (dataType.getName()) {
             case ASCII:
                 return bs.getString(0);
@@ -372,11 +387,13 @@ public class DataTypeIntegrationTest extends CCMBridge.PerClassSingleNodeCluster
             case VARINT:
                 return bs.getVarint(0);
             case LIST:
-                return bs.getList(0, dataType.getTypeArguments().get(0).asJavaClass());
+                return bs.getList(0, codecRegistry.codecFor(dataType.getTypeArguments().get(0)).getJavaType());
             case SET:
-                return bs.getSet(0, dataType.getTypeArguments().get(0).asJavaClass());
+                return bs.getSet(0, codecRegistry.codecFor(dataType.getTypeArguments().get(0)).getJavaType());
             case MAP:
-                return bs.getMap(0, dataType.getTypeArguments().get(0).asJavaClass(), dataType.getTypeArguments().get(1).asJavaClass());
+                return bs.getMap(0,
+                    codecRegistry.codecFor(dataType.getTypeArguments().get(0)).getJavaType(),
+                    codecRegistry.codecFor(dataType.getTypeArguments().get(1)).getJavaType());
             case CUSTOM:
             case COUNTER:
             default:

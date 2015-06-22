@@ -62,6 +62,7 @@ public abstract class Statement {
     private volatile ByteBuffer pagingState;
     protected volatile Boolean idempotent;
     private volatile Map<String, ByteBuffer> outgoingPayload;
+    private volatile CodecRegistry codecRegistry;
 
     // We don't want to expose the constructor, because the code relies on this being only sub-classed by RegularStatement, BoundStatement and BatchStatement
     Statement() {
@@ -483,4 +484,34 @@ public abstract class Statement {
         this.outgoingPayload = payload == null ? null : ImmutableMap.copyOf(payload);
         return this;
     }
+
+    protected CodecRegistry getCodecRegistry() {
+        if(codecRegistry == null)
+            codecRegistry = new CodecRegistry();
+        return codecRegistry;
+    }
+
+    /**
+     * Set the {@link CodecRegistry} to use within this statement.
+     * <p>
+     * This instance should be used to serialize parameter values contained in this statement,
+     * for example, when {@link #getRoutingKey()} or
+     * {@link RegularStatement#getValues(ProtocolVersion)} are invoked.
+     * <p>
+     * If no {@link CodecRegistry} is explicitly set via this method, a default
+     * instance will be used instead.
+     * <p>
+     * Users should normally not invoke this method directly;
+     * it will be invoked whenever appropriate by the Session
+     * when this statement is submitted for execution.
+     *
+     * @param codecRegistry The {@link CodecRegistry} instance to use.
+     * @return this {@link Statement} object.
+     * @since 2.2
+     */
+    protected Statement setCodecRegistry(CodecRegistry codecRegistry) {
+        this.codecRegistry = codecRegistry;
+        return this;
+    }
+
 }

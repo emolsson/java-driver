@@ -15,10 +15,14 @@
  */
 package com.datastax.driver.mapping;
 
-import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.ExecutionInfo;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 
 /**
  * A {@code ResultSet} mapped to an entity class.
@@ -38,9 +42,9 @@ public class Result<T> implements Iterable<T> {
     private T map(Row row) {
         T entity = mapper.newEntity();
         for (ColumnMapper<T> cm : mapper.allColumns()) {
-            ByteBuffer bytes = row.getBytesUnsafe(cm.getColumnName());
-            if (bytes != null)
-                cm.setValue(entity, cm.getDataType().deserialize(bytes, protocolVersion));
+            Object value = row.getObject(cm.getColumnName());
+            if (value != null)
+                cm.setValue(entity, value);
         }
         return entity;
     }

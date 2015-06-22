@@ -31,7 +31,6 @@ public class Batch extends BuiltStatement {
     private final List<RegularStatement> statements;
     private final boolean logged;
     private final Options usings;
-    private ByteBuffer routingKey;
 
     // Only used when we add at last one statement that is not a BuiltStatement subclass
     private int nonBuiltStatementValues;
@@ -58,7 +57,7 @@ public class Batch extends BuiltStatement {
 
         if (!usings.usings.isEmpty()) {
             builder.append(" USING ");
-            Utils.joinAndAppend(builder, " AND ", usings.usings, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", usings.usings, variables);
         }
         builder.append(' ');
 
@@ -116,9 +115,6 @@ public class Batch extends BuiltStatement {
 
         checkForBindMarkers(null);
 
-        if (routingKey == null && statement.getRoutingKey() != null)
-            routingKey = statement.getRoutingKey();
-
         return this;
     }
 
@@ -164,7 +160,13 @@ public class Batch extends BuiltStatement {
      */
     @Override
     public ByteBuffer getRoutingKey() {
-        return routingKey;
+        for (RegularStatement statement : statements) {
+            ByteBuffer routingKey = statement.getRoutingKey();
+            if (routingKey != null) {
+                return routingKey;
+            }
+        }
+        return null;
     }
 
     /**

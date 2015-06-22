@@ -18,7 +18,6 @@ package com.datastax.driver.mapping;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -59,7 +58,7 @@ class MethodMapper {
         this.statement = ps;
 
         if (method.isVarArgs())
-            throw new IllegalArgumentException(String.format("Invalid varargs method %s in @Accessor interface"));
+            throw new IllegalArgumentException(String.format("Invalid varargs method %s in @Accessor interface", method));
         if (ps.getVariables().size() != method.getParameterTypes().length)
             throw new IllegalArgumentException(String.format("The number of arguments for method %s (%d) does not match the number of bind parameters in the @Query (%d)",
                                                               method.getName(), method.getParameterTypes().length, ps.getVariables().size()));
@@ -171,19 +170,10 @@ class MethodMapper {
         }
 
         void setValue(BoundStatement boundStatement, Object arg, ProtocolVersion protocolVersion) {
-            ByteBuffer serializedArg = (dataType == null)
-                ? DataType.serializeValue(arg, protocolVersion)
-                : dataType.serialize(arg, protocolVersion);
             if (paramName == null) {
-                if (arg == null)
-                    boundStatement.setToNull(paramIdx);
-                else
-                    boundStatement.setBytesUnsafe(paramIdx, serializedArg);
+                boundStatement.setObject(paramIdx, arg);
             } else {
-                if (arg == null)
-                    boundStatement.setToNull(paramName);
-                else
-                    boundStatement.setBytesUnsafe(paramName, serializedArg);
+                boundStatement.setObject(paramName, arg);
             }
         }
     }

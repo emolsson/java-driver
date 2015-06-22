@@ -24,6 +24,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+import com.datastax.driver.core.querybuilder.BuiltStatement;
+
 /**
  * Abstract implementation of the Session interface.
  *
@@ -111,7 +113,8 @@ public abstract class AbstractSession implements Session {
         if (statement.hasValues())
             throw new IllegalArgumentException("A statement to prepare should not have values");
 
-        ListenableFuture<PreparedStatement> prepared = prepareAsync(statement.toString(), statement.getOutgoingPayload());
+        statement.setCodecRegistry(getCluster().getConfiguration().getCodecRegistry());
+        ListenableFuture<PreparedStatement> prepared = prepareAsync(statement.getQueryString(), statement.getOutgoingPayload());
         return Futures.transform(prepared, new Function<PreparedStatement, PreparedStatement>() {
             @Override
             public PreparedStatement apply(PreparedStatement prepared) {

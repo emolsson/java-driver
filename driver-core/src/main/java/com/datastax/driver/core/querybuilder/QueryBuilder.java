@@ -17,6 +17,7 @@ package com.datastax.driver.core.querybuilder;
 
 import java.util.*;
 
+import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.TableMetadata;
 
@@ -29,7 +30,7 @@ import com.datastax.driver.core.TableMetadata;
  * It is thus advised to do so if a {@link com.datastax.driver.core.policies.TokenAwarePolicy}
  * is in use.
  * <p>
- * The provided builders perform very little validation of the built query.
+ * The provider builders perform very little validation of the built query.
  * There is thus no guarantee that a built query is valid, and it is
  * definitively possible to create invalid queries.
  * <p>
@@ -258,7 +259,7 @@ public final class QueryBuilder {
     public static String token(String... columnNames) {
         StringBuilder sb = new StringBuilder();
         sb.append("token(");
-        Utils.joinAndAppendNames(sb, ",", Arrays.asList((Object[])columnNames));
+        Utils.joinAndAppendNames(sb, null, ",", Arrays.asList((Object[])columnNames));
         sb.append(')');
         return sb.toString();
     }

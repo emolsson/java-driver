@@ -412,4 +412,36 @@ public interface GettableByNameData {
      * @throws IllegalArgumentException if {@code name} is not a valid name for this object.
      */
     Object getObject(String name);
+
+    /**
+     * Returns the value for {@code name} converted to the given Java type.
+     * A suitable {@link TypeCodec} instance for {@code targetClass} must
+     * have been previously registered with the {@link CodecRegistry} currently in use.
+     *
+     * @param name the name to retrieve.
+     * @param targetClass The Java type the value should be converted to.
+     * @return the value for {@code name} value converted to the given Java type.
+     * If the CQL value is {@code NULL}, then {@code null} is returned.
+     * @throws IllegalArgumentException if {@code name} is not a valid name for this object.
+     * @throws com.datastax.driver.core.exceptions.CodecNotFoundException
+     * if no {@link TypeCodec} instance for {@code targetClass} could be found
+     * by the {@link CodecRegistry} currently in use.
+     */
+    <T> T getObject(String name, Class<T> targetClass);
+
+    /**
+     * Returns the value for {@code name} converted to the given Java type.
+     * A suitable {@link TypeCodec} instance for {@code targetType} must
+     * have been previously registered with the {@link CodecRegistry} currently in use.
+     *
+     * @param name the name to retrieve.
+     * @param targetType The Java type the value should be converted to.
+     * @return the value for {@code name} value converted to the given Java type.
+     * If the CQL value is {@code NULL}, then {@code null} is returned.
+     * @throws IllegalArgumentException if {@code name} is not a valid name for this object.
+     * @throws com.datastax.driver.core.exceptions.CodecNotFoundException
+     * if no {@link TypeCodec} instance for {@code targetType} could be found
+     * by the {@link CodecRegistry} currently in use.
+     */
+    <T> T getObject(String name, TypeToken<T> targetType);
 }

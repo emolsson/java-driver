@@ -37,7 +37,7 @@ import com.datastax.driver.core.utils.CassandraVersion;
 import static com.datastax.driver.core.DataType.cint;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 
-public class QueryBuilderTest {
+public class QueryBuilderCodecTest {
 
     @Test(groups = "unit")
     public void selectTest() throws Exception {

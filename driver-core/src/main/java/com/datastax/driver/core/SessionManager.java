@@ -34,6 +34,7 @@ import com.datastax.driver.core.exceptions.UnsupportedFeatureException;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.datastax.driver.core.policies.ReconnectionPolicy;
 import com.datastax.driver.core.policies.SpeculativeExecutionPolicy;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.utils.MoreFutures;
 
 /**
@@ -147,7 +148,7 @@ class SessionManager extends AbstractSession {
                         switch (rm.kind) {
                             case PREPARED:
                                 Responses.Result.Prepared pmsg = (Responses.Result.Prepared)rm;
-                                PreparedStatement stmt = DefaultPreparedStatement.fromMessage(pmsg, cluster.getMetadata(), cluster.getConfiguration().getProtocolOptions().getProtocolVersion(), query, poolsState.keyspace);
+                                PreparedStatement stmt = DefaultPreparedStatement.fromMessage(pmsg, cluster, query, poolsState.keyspace);
                                 stmt = cluster.manager.addPrepared(stmt);
                                 try {
                                     // All Sessions are connected to the same nodes so it's enough to prepare only the nodes of this session.
@@ -506,6 +507,10 @@ class SessionManager extends AbstractSession {
             statement = ((StatementWrapper)statement).getWrappedStatement();
 
         Message.Request request;
+
+        CodecRegistry codecRegistry = getCluster().getConfiguration().getCodecRegistry();
+        statement.setCodecRegistry(codecRegistry);
+
         if (statement instanceof RegularStatement) {
             RegularStatement rs = (RegularStatement)statement;
 

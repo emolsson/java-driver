@@ -38,4 +38,9 @@ public class Assertions extends org.assertj.core.api.Assertions{
     public static LocalDateAssert assertThat(LocalDate localDate) {
         return new LocalDateAssert(localDate);
     }
+
+    public static TypeCodecAssert assertThat(TypeCodec codec) {
+        return new TypeCodecAssert(codec);
+    }
+
 }

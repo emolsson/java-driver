@@ -264,4 +264,21 @@ public abstract class AbstractGettableData extends AbstractGettableByIndexData i
     public Object getObject(String name) {
         return getObject(getIndexOf(name));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T getObject(String name, Class<T> targetClass) {
+        return getObject(getIndexOf(name), targetClass);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T getObject(String name, TypeToken<T> targetType) {
+        return getObject(getIndexOf(name), targetType);
+    }
+
 }

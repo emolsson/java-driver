@@ -128,7 +128,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, getFixedValue(type)));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_native'", name, ALL_NATIVE_TABLE)).one();
-            assertEquals(getValue(row, name, type), getFixedValue(type), "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), getFixedValue(type), "For type " + type);
         }
     }
 
@@ -149,7 +149,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, getFixedValue2(type)));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_native'", name, ALL_NATIVE_TABLE)).one();
-            assertEquals(getValue(row, name, type), getFixedValue2(type), "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), getFixedValue2(type), "For type " + type);
         }
     }
 
@@ -170,7 +170,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, value));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_list'", name, ALL_LIST_TABLE)).one();
-            assertEquals(getValue(row, name, type), value, "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
         }
     }
 
@@ -194,7 +194,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, value));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_list'", name, ALL_LIST_TABLE)).one();
-            assertEquals(getValue(row, name, type), value, "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
         }
     }
 
@@ -215,7 +215,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, value));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_set'", name, ALL_SET_TABLE)).one();
-            assertEquals(getValue(row, name, type), value, "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
         }
     }
 
@@ -239,7 +239,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
             session.execute(setBoundValue(bs, name, type, value));
 
             Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_set'", name, ALL_SET_TABLE)).one();
-            assertEquals(getValue(row, name, type), value, "For type " + type);
+            assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
         }
     }
 
@@ -265,7 +265,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
                 session.execute(setBoundValue(bs, name, type, value));
 
                 Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_map'", name, ALL_MAP_TABLE)).one();
-                assertEquals(getValue(row, name, type), value, "For type " + type);
+                assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
             }
         }
     }
@@ -295,7 +295,7 @@ public class PreparedStatementTest extends CCMBridge.PerClassSingleNodeCluster {
                 session.execute(setBoundValue(bs, name, type, value));
 
                 Row row = session.execute(String.format("SELECT %s FROM %s WHERE k='prepared_map'", name, ALL_MAP_TABLE)).one();
-                assertEquals(getValue(row, name, type), value, "For type " + type);
+                assertEquals(getValue(row, name, type, cluster.getConfiguration().getCodecRegistry()), value, "For type " + type);
             }
         }
     }

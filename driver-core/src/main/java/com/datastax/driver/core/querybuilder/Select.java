@@ -15,7 +15,6 @@
  */
 package com.datastax.driver.core.querybuilder;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,7 +63,7 @@ public class Select extends BuiltStatement {
         if (columnNames == null) {
             builder.append('*');
         } else {
-            Utils.joinAndAppendNames(builder, ",", columnNames);
+            Utils.joinAndAppendNames(builder, getCodecRegistry(), ",", columnNames);
         }
         builder.append(" FROM ");
         if (keyspace != null)
@@ -73,12 +72,12 @@ public class Select extends BuiltStatement {
 
         if (!where.clauses.isEmpty()) {
             builder.append(" WHERE ");
-            Utils.joinAndAppend(builder, " AND ", where.clauses, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", where.clauses, variables);
         }
 
         if (orderings != null) {
             builder.append(" ORDER BY ");
-            Utils.joinAndAppend(builder, ",", orderings, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), ",", orderings, variables);
         }
 
         if (limit != null) {

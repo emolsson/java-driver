@@ -19,7 +19,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
 
 import com.datastax.driver.core.Responses.Result.Rows.Metadata;
@@ -348,11 +347,11 @@ class Responses {
                     this.pkIndices = pkIndices;
                 }
 
-                public static Metadata decode(ByteBuf body) {
-                    return decode(body, false);
+                public static Metadata decode(ByteBuf body, ProtocolVersion protocolVersion) {
+                    return decode(body, false, protocolVersion);
                 }
 
-                public static Metadata decode(ByteBuf body, boolean withPkIndices) {
+                public static Metadata decode(ByteBuf body, boolean withPkIndices, ProtocolVersion protocolVersion) {
 
                     // flags & column count
                     EnumSet<Flag> flags = Flag.deserialize(body.readInt());
@@ -388,7 +387,9 @@ class Responses {
                         String ksName = globalTablesSpec ? globalKsName : CBUtil.readString(body);
                         String cfName = globalTablesSpec ? globalCfName : CBUtil.readString(body);
                         String name = CBUtil.readString(body);
-                        DataType type = DataType.decode(body);
+                        // will set the appropriate CodecRegistry instance later
+                        // when the message will be decoded into either a PreparedStatement or a ResultSet
+                        DataType type = DataType.decode(body, protocolVersion, new CodecRegistry());
                         defs[i] = new ColumnDefinitions.Definition(ksName, cfName, name, type);
                     }
 
@@ -416,7 +417,7 @@ class Responses {
             public static final Message.Decoder<Result> subcodec = new Message.Decoder<Result>() {
                 public Result decode(ByteBuf body, ProtocolVersion version) {
 
-                    Metadata metadata = Metadata.decode(body);
+                    Metadata metadata = Metadata.decode(body, version);
 
                     int rowCount = body.readInt();
                     int columnCount = metadata.columnCount;
@@ -429,23 +430,27 @@ class Responses {
                         data.add(row);
                     }
 
-                    return new Rows(metadata, data);
+                    return new Rows(metadata, data, version);
                 }
             };
 
             public final Metadata metadata;
             public final Queue<List<ByteBuffer>> data;
+            private final ProtocolVersion version;
 
-            private Rows(Metadata metadata, Queue<List<ByteBuffer>> data) {
+            private Rows(Metadata metadata, Queue<List<ByteBuffer>> data, ProtocolVersion version) {
                 super(Kind.ROWS);
                 this.metadata = metadata;
                 this.data = data;
+                this.version = version;
             }
 
             @Override
             public String toString() {
                 StringBuilder sb = new StringBuilder();
                 sb.append("ROWS ").append(metadata).append('\n');
+                // using default codec registry as this is only intended for debugging purposes
+                CodecRegistry codecRegistry = new CodecRegistry();
                 for (List<ByteBuffer> row : data) {
                     for (int i = 0; i < row.size(); i++) {
                         ByteBuffer v = row.get(i);
@@ -456,14 +461,7 @@ class Responses {
                             if (metadata.columns == null) {
                                 sb.append(Bytes.toHexString(v));
                             } else {
-                                // We don't have the protocol version available and it's a pain to change
-                                // everything to get it when this method is only ever call for debugging.
-                                // So trying v3 and falling back to v2, which is ugly but good enough for now.
-                                try {
-                                    sb.append(metadata.columns.getType(i).deserialize(v, ProtocolVersion.V3));
-                                } catch (IllegalArgumentException e) {
-                                    sb.append(metadata.columns.getType(i).deserialize(v, ProtocolVersion.V2));
-                                }
+                                sb.append(codecRegistry.codecFor(metadata.columns.getType(i)).deserialize(v, version));
                             }
                         }
                     }
@@ -480,7 +478,7 @@ class Responses {
                 public Result decode(ByteBuf body, ProtocolVersion version) {
                     MD5Digest id = MD5Digest.wrap(CBUtil.readBytes(body));
                     boolean withPkIndices = version.compareTo(V4) >= 0;
-                    Rows.Metadata metadata = Rows.Metadata.decode(body, withPkIndices);
+                    Rows.Metadata metadata = Rows.Metadata.decode(body, withPkIndices, version);
                     Rows.Metadata resultMetadata = decodeResultMetadata(body, version);
                     return new Prepared(id, metadata, resultMetadata);
                 }
@@ -492,7 +490,7 @@ class Responses {
                         case V2:
                         case V3:
                         case V4:
-                            return Rows.Metadata.decode(body);
+                            return Rows.Metadata.decode(body, version);
                         default:
                             throw version.unsupported();
                     }

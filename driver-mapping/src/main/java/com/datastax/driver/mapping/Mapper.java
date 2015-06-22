@@ -23,7 +23,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +123,7 @@ public class Mapper<T> {
         int i = 0;
         for (ColumnMapper<T> cm : mapper.allColumns()) {
             Object value = cm.getValue(entity);
-            bs.setBytesUnsafe(i++, value == null ? null : cm.getDataType().serialize(value, protocolVersion));
+            bs.setObject(i++, value);
         }
 
         if (mapper.writeConsistency != null)
@@ -210,7 +209,7 @@ public class Mapper<T> {
             Object value = primaryKey[i];
             if (value == null)
                 throw new IllegalArgumentException(String.format("Invalid null value for PRIMARY KEY column %s (argument %d)", column.getColumnName(), i));
-            bs.setBytesUnsafe(i, column.getDataType().serialize(value, protocolVersion));
+            bs.setObject(i, value);
         }
 
         if (mapper.writeConsistency != null)
@@ -317,7 +316,7 @@ public class Mapper<T> {
             Object value = primaryKey[i];
             if (value == null)
                 throw new IllegalArgumentException(String.format("Invalid null value for PRIMARY KEY column %s (argument %d)", column.getColumnName(), i));
-            bs.setBytesUnsafe(i, column.getDataType().serialize(value, protocolVersion));
+            bs.setObject(i, value);
         }
 
         if (mapper.readConsistency != null)

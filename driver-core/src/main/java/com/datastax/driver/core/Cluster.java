@@ -591,8 +591,9 @@ public class Cluster implements Closeable {
 
         private NettyOptions nettyOptions = NettyOptions.DEFAULT_INSTANCE;
 
-        private Collection<Host.StateListener> listeners;
+        private CodecRegistry codecRegistry = new CodecRegistry();
 
+        private Collection<Host.StateListener> listeners;
 
         @Override
         public String getClusterName() {
@@ -931,6 +932,21 @@ public class Cluster implements Closeable {
             return this;
         }
 
+
+        /**
+         * Configures the {@link CodecRegistry} instance to use for the new cluster.
+         * <p>
+         * If no codec registry is set through this method, {@link CodecRegistry#DEFAULT_INSTANCE}
+         * will be used instead.
+         *
+         * @param codecRegistry the codec registry to use.
+         * @return this Builder.
+         */
+        public Builder withCodecRegistry(CodecRegistry codecRegistry) {
+            this.codecRegistry = codecRegistry;
+            return this;
+        }
+
         /**
          * Uses the provided credentials when connecting to Cassandra hosts.
          * <p>
@@ -1128,7 +1144,8 @@ public class Cluster implements Closeable {
                                      socketOptions == null ? new SocketOptions() : socketOptions,
                                      metricsEnabled ? new MetricsOptions(jmxEnabled) : null,
                                      queryOptions == null ? new QueryOptions() : queryOptions,
-                                     nettyOptions);
+                                     nettyOptions,
+                                     codecRegistry);
         }
 
         @Override

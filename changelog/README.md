@@ -3,6 +3,7 @@
 ### 2.2.0-rc2 (in progress)
 
 - [improvement] Rename DateWithoutTime to LocalDate (JAVA-810)
+- [improvement] Allow user to register custom type codecs (JAVA-721)
 
 ### 2.2.0-rc1
 

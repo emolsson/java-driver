@@ -337,4 +337,6 @@ public interface PreparedStatement {
      */
     public PreparedStatement setOutgoingPayload(Map<String, ByteBuffer> payload);
 
+    public CodecRegistry getCodecRegistry();
+
 }

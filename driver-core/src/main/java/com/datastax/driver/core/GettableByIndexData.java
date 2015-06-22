@@ -413,4 +413,35 @@ public interface GettableByIndexData {
      * @throws IndexOutOfBoundsException if {@code i} is not a valid index for this object.
      */
     public Object getObject(int i);
+
+    /**
+     * Returns the the {@code i}th value converted to the given Java type.
+     * A suitable {@link TypeCodec} instance for {@code targetClass} must
+     * have been previously registered with the {@link CodecRegistry} currently in use.
+     *
+     * @param i the index to retrieve.
+     * @param targetClass The Java type the value should be converted to.
+     * @return the value of the {@code i}th value converted to the given Java type.
+     * If the CQL value is {@code NULL}, then {@code null} is returned.
+     * @throws com.datastax.driver.core.exceptions.CodecNotFoundException
+     * if no {@link TypeCodec} instance for {@code targetClass} could be found
+     * by the {@link CodecRegistry} currently in use.
+     */
+    <T> T getObject(int i, Class<T> targetClass);
+
+    /**
+     * Returns the the {@code i}th value converted to the given Java type.
+     * A suitable {@link TypeCodec} instance for {@code targetType} must
+     * have been previously registered with the {@link CodecRegistry} currently in use.
+     *
+     * @param i the index to retrieve.
+     * @param targetType The Java type the value should be converted to.
+     * @return the value of the {@code i}th value converted to the given Java type.
+     * If the CQL value is {@code NULL}, then {@code null} is returned.
+     * @throws com.datastax.driver.core.exceptions.CodecNotFoundException
+     * if no {@link TypeCodec} instance for {@code targetType} could be found
+     * by the {@link CodecRegistry} currently in use.
+     */
+    <T> T getObject(int i, TypeToken<T> targetType);
+
 }

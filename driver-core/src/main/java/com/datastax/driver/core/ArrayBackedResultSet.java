@@ -49,7 +49,7 @@ abstract class ArrayBackedResultSet implements ResultSet {
         this.metadata = metadata;
         this.protocolVersion = protocolVersion;
         this.tokenFactory = tokenFactory;
-        this.wasApplied = checkWasApplied(firstRow, metadata);
+        this.wasApplied = checkWasApplied(firstRow, metadata, protocolVersion);
     }
 
     static ArrayBackedResultSet fromMessage(Responses.Result msg, SessionManager session, ProtocolVersion protocolVersion, ExecutionInfo info, Statement statement) {
@@ -76,6 +76,12 @@ abstract class ArrayBackedResultSet implements ResultSet {
                 // info can be null only for internal calls, but we don't page those. We assert
                 // this explicitly because MultiPage implementation don't support info == null.
                 assert r.metadata.pagingState == null || info != null;
+
+                CodecRegistry codecRegistry = session == null ?
+                    new CodecRegistry() :
+                    session.getCluster().getConfiguration().getCodecRegistry();
+                columnDefs.setCodecRegistry(codecRegistry);
+
                 return r.metadata.pagingState == null
                     ? new SinglePage(columnDefs, tokenFactory, protocolVersion, r.data, info)
                     : new MultiPage(columnDefs, tokenFactory, protocolVersion, r.data, info, r.metadata.pagingState, session, statement);
@@ -418,7 +424,7 @@ abstract class ArrayBackedResultSet implements ResultSet {
 
     // This method checks the value of the "[applied]" column manually, to avoid instantiating an ArrayBackedRow
     // object that we would throw away immediately.
-    private static boolean checkWasApplied(List<ByteBuffer> firstRow, ColumnDefinitions metadata) {
+    private static boolean checkWasApplied(List<ByteBuffer> firstRow, ColumnDefinitions metadata, ProtocolVersion protocolVersion) {
         // If the column is not present or not a boolean, we assume the query
         // was not a conditional statement, and therefore return true.
         if (firstRow == null)
@@ -435,6 +441,6 @@ abstract class ArrayBackedResultSet implements ResultSet {
         if (value == null || value.remaining() == 0)
             return false;
 
-        return TypeCodec.BooleanCodec.instance.deserializeNoBoxing(value);
+        return TypeCodec.BooleanCodec.instance.deserializeNoBoxing(value, protocolVersion);
     }
 }

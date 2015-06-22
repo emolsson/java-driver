@@ -15,11 +15,13 @@
  */
 package com.datastax.driver.mapping;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 
 /**
  * An object handling the mapping of a particular class to a UDT.
@@ -29,8 +31,6 @@ import com.datastax.driver.core.*;
  * </p>
  */
 public class UDTMapper<T> {
-    // UDTs are always serialized with the v3 protocol
-    private static final ProtocolVersion UDT_PROTOCOL_VERSION = ProtocolVersion.V3;
 
     private final EntityMapper<T> entityMapper;
     private final UserType userType;
@@ -76,7 +76,7 @@ public class UDTMapper<T> {
         UDTValue udtValue = userType.newValue();
         for (ColumnMapper<T> cm : entityMapper.allColumns()) {
             Object value = cm.getValue(entity);
-            udtValue.setBytesUnsafe(cm.getColumnName(), value == null ? null : cm.getDataType().serialize(value, UDT_PROTOCOL_VERSION));
+            udtValue.setObject(cm.getColumnName(), value);
         }
         return udtValue;
     }
@@ -88,9 +88,7 @@ public class UDTMapper<T> {
     T toEntity(UDTValue udtValue) {
         T entity = entityMapper.newEntity();
         for (ColumnMapper<T> cm : entityMapper.allColumns()) {
-            ByteBuffer bytes = udtValue.getBytesUnsafe(cm.getColumnName());
-            if (bytes != null)
-                cm.setValue(entity, cm.getDataType().deserialize(bytes, UDT_PROTOCOL_VERSION));
+            cm.setValue(entity, udtValue.getObject(cm.getColumnName()));
         }
         return entity;
     }

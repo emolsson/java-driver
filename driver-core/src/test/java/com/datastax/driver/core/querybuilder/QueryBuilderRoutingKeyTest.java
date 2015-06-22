@@ -42,7 +42,7 @@ public class QueryBuilderRoutingKeyTest extends CCMBridge.PerClassSingleNodeClus
     @Test(groups = "short")
     public void textRoutingKeyTest() throws Exception {
 
-        Statement query;
+        BuiltStatement query;
         TableMetadata table = cluster.getMetadata().getKeyspace(keyspace).getTable(TABLE_TEXT);
         assertNotNull(table);
 
@@ -62,7 +62,7 @@ public class QueryBuilderRoutingKeyTest extends CCMBridge.PerClassSingleNodeClus
     @Test(groups = "short")
     public void intRoutingKeyTest() throws Exception {
 
-        Statement query;
+        BuiltStatement query;
         TableMetadata table = cluster.getMetadata().getKeyspace(keyspace).getTable(TABLE_INT);
         assertNotNull(table);
 
@@ -83,7 +83,7 @@ public class QueryBuilderRoutingKeyTest extends CCMBridge.PerClassSingleNodeClus
     @Test(groups = "short")
     public void intRoutingBatchKeyTest() throws Exception {
 
-        RegularStatement query;
+        BuiltStatement query;
         TableMetadata table = cluster.getMetadata().getKeyspace(keyspace).getTable(TABLE_INT);
         assertNotNull(table);
 
@@ -91,7 +91,7 @@ public class QueryBuilderRoutingKeyTest extends CCMBridge.PerClassSingleNodeClus
         bb.putInt(0, 42);
 
         String batch_query;
-        Statement batch;
+        BuiltStatement batch;
         ResultSet rs;
 
         query = select().from(table).where(eq("k", 42));

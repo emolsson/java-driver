@@ -61,6 +61,7 @@ public class ColumnDefinitions implements Iterable<ColumnDefinitions.Definition>
 
     private final Definition[] byIdx;
     private final Map<String, int[]> byName;
+    private CodecRegistry codecRegistry;
 
     ColumnDefinitions(Definition[] defs) {
 
@@ -305,6 +306,23 @@ public class ColumnDefinitions implements Iterable<ColumnDefinitions.Definition>
             throw new InvalidTypeException(String.format("Column %s is of type %s", getName(i), defined));
 
         return defined.getName();
+    }
+
+    CodecRegistry getCodecRegistry() {
+        if(codecRegistry == null)
+            codecRegistry = new CodecRegistry();
+        return codecRegistry;
+    }
+
+    void setCodecRegistry(CodecRegistry codecRegistry) {
+        this.codecRegistry = codecRegistry;
+        for (Definition definition : byIdx) {
+            if(definition.type instanceof UserType) {
+                // by the time user types are created, the
+                // codec registry is not available, so set it now
+                ((UserType)definition.type).setCodecRegistry(codecRegistry);
+            }
+        }
     }
 
     /**

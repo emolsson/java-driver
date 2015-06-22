@@ -21,6 +21,8 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import com.google.common.reflect.TypeToken;
+
 import com.datastax.driver.core.exceptions.InvalidTypeException;
 
 /**
@@ -391,4 +393,11 @@ public interface SettableByNameData<T extends SettableData<T>> {
      * @throws IllegalArgumentException if {@code name} is not a valid name for this object.
      */
     public T setToNull(String name);
+
+    public <V> T setObject(String name, V v);
+
+    public <V> T setObject(String name, V v, Class<V> targetClass);
+
+    public <V> T setObject(String name, V v, TypeToken<V> targetType);
+
 }

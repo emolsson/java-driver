@@ -15,7 +15,6 @@
  */
 package com.datastax.driver.core.querybuilder;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,9 +53,9 @@ public class Insert extends BuiltStatement {
             Utils.appendName(keyspace, builder).append('.');
         Utils.appendName(table, builder);
         builder.append('(');
-        Utils.joinAndAppendNames(builder, ",", names);
+        Utils.joinAndAppendNames(builder, getCodecRegistry(), ",", names);
         builder.append(") VALUES (");
-        Utils.joinAndAppendValues(builder, ",", values, variables);
+        Utils.joinAndAppendValues(builder, getCodecRegistry(), ",", values, variables);
         builder.append(')');
 
         if (ifNotExists)
@@ -64,7 +63,7 @@ public class Insert extends BuiltStatement {
 
         if (!usings.usings.isEmpty()) {
             builder.append(" USING ");
-            Utils.joinAndAppend(builder, " AND ", usings.usings, variables);
+            Utils.joinAndAppend(builder, getCodecRegistry(), " AND ", usings.usings, variables);
         }
         return builder;
     }
