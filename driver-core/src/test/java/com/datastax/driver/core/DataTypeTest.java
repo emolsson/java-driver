@@ -23,7 +23,6 @@ import java.util.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
-
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -43,19 +42,66 @@ public class DataTypeTest {
         return t.getName() == DataType.Name.COUNTER;
     }
 
-    private static String[] getCQLStringTestData(DataType dt) {
+    private static String[] getOutputCQLStringTestData(DataType dt) {
         switch (dt.getName()) {
             case ASCII:
             case TEXT:
             case VARCHAR:
                 return new String[]{ "'foo'", "'fo''o'" };
             case BIGINT:
-            case TIMESTAMP:
                 return new String[]{ "42", "91294377723", "-133" };
+            case TIMESTAMP:
+                return new String[]{ "42", "91294377723", "-133", "784041330999" };
             case DATE:
-                return new String[]{ "2014-01-01", "1970-01-01" };
+                return new String[]{ "'2014-01-01'", "'1970-01-01'", "'1970-01-01'", "'-5877641-06-23'" };
             case TIME:
-                return new String[]{ "54012123450000", "0" };
+                return new String[]{ "'15:00:12.123450000'", "'00:00:00.000000000'", "'15:00:12.123450000'" };
+            case BLOB:
+                return new String[]{ "0x2450", "0x" };
+            case BOOLEAN:
+                return new String[]{ "true", "false" };
+            case DECIMAL:
+                return new String[]{ "1.23E+8" };
+            case DOUBLE:
+                return new String[]{ "2.39324324", "-12.0" };
+            case FLOAT:
+                return new String[]{ "2.39", "-12.0" };
+            case INET:
+                return new String[]{ "'128.2.12.3'" };
+            case TINYINT:
+                return new String[]{ "-4", "44" };
+            case SMALLINT:
+                return new String[]{ "-3", "43" };
+            case INT:
+                return new String[]{ "-2", "42" };
+            case TIMEUUID:
+                return new String[]{ "fe2b4360-28c6-11e2-81c1-0800200c9a66" };
+            case UUID:
+                return new String[]{ "fe2b4360-28c6-11e2-81c1-0800200c9a66", "067e6162-3b6f-4ae2-a171-2470b63dff00" };
+            case VARINT:
+                return new String[]{ "12387290982347987032483422342432" };
+            default:
+                throw new RuntimeException("Missing handling of " + dt);
+        }
+    }
+
+    private static String[] getInputCQLStringTestData(DataType dt) {
+        switch (dt.getName()) {
+            case ASCII:
+            case TEXT:
+            case VARCHAR:
+                return new String[]{ "'foo'", "'fo''o'" };
+            case BIGINT:
+                return new String[]{ "42", "91294377723", "-133" };
+            case TIMESTAMP:
+                // single quotes are optional for long literals, mandatory for date patterns
+                return new String[]{ "42", "91294377723", "-133", "'1994-11-05T14:15:30.999+0100'" };
+            case DATE:
+                // single quotes are optional for long literals, mandatory for date patterns
+                return new String[]{ "'2014-01-01'", "'1970-01-01'", "'2147483648'", "0" };
+            case TIME:
+                // all literals must by enclosed in single quotes
+                return new String[]{ "'54012123450000'", "'0'", "'15:00:12.123450000'" };
             case BLOB:
                 return new String[]{ "0x2450", "0x" };
             case BOOLEAN:
@@ -94,11 +140,21 @@ public class DataTypeTest {
             case BIGINT:
                 return new Object[]{ 42L, 91294377723L, -133L };
             case TIMESTAMP:
-                return new Object[]{ new Date(42L), new Date(91294377723L), new Date(-133L) };
+                return new Object[]{
+                    new Date(42L),
+                    new Date(91294377723L),
+                    new Date(-133L),
+                    new Date(784041330999L)
+                };
             case DATE:
-                return new Object[]{ LocalDate.fromDaysSinceEpoch(16071) /* 2014-01-01 */, LocalDate.fromDaysSinceEpoch(0) /* 1970-01-01 */ };
+                return new Object[]{
+                    LocalDate.fromDaysSinceEpoch(16071) /* 2014-01-01 */,
+                    LocalDate.fromDaysSinceEpoch(0) /* 1970-01-01 */,
+                    LocalDate.fromDaysSinceEpoch((int)(2147483648L - (1L << 31))),
+                    LocalDate.fromDaysSinceEpoch((int)(0 - (1L << 31)))
+                };
             case TIME:
-                return new Object[]{ 54012123450000L /* 15:00:12.123450000 */, 0L };
+                return new Object[]{ 54012123450000L /* 15:00:12.123450000 */, 0L, 54012123450000L };
             case BLOB:
                 return new Object[]{ Bytes.fromHexString("0x2450"), ByteBuffer.allocate(0) };
             case BOOLEAN:
@@ -138,10 +194,10 @@ public class DataTypeTest {
             if (exclude(dt))
                 continue;
 
-            String[] s = getCQLStringTestData(dt);
+            String[] s = getInputCQLStringTestData(dt);
             Object[] o = getTestData(dt);
             for (int i = 0; i < s.length; i++)
-                assertEquals(dt.parse(s[i]), o[i], String.format("For input %d of %s, ", i, dt, s[i], o[i]));
+                assertEquals(dt.parse(s[i]), o[i], String.format("For input %d of %s", i, dt));
         }
     }
 
@@ -151,10 +207,10 @@ public class DataTypeTest {
             if (exclude(dt))
                 continue;
 
-            String[] s = getCQLStringTestData(dt);
             Object[] o = getTestData(dt);
+            String[] s = getOutputCQLStringTestData(dt);
             for (int i = 0; i < s.length; i++)
-                assertEquals(dt.format(o[i]), s[i], String.format("For input %d of %s, ", i, dt, o[i], s[i]));
+                assertEquals(dt.format(o[i]), s[i], String.format("For input %d of %s", i, dt));
         }
     }
 
