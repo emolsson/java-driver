@@ -85,13 +85,18 @@ public class MapperSelectFunctionsTest extends CCMBridge.PerClassSingleNodeClust
     @Test(groups = "short")
     void should_fetch_computed_fields() {
         Mapper<User> mapper = new MappingManager(session).mapper(User.class);
+        long writeTime = System.currentTimeMillis() * 1000;
         mapper.save(new User(42, "helloworld"));
         User saved = mapper.get(42);
-        assertThat(saved.getWriteTime()).isNotNull();
-        System.out.println("saved.getWriteTime() = " + saved.getWriteTime());
-        BoundStatement bs = (BoundStatement)mapper.getQuery(42);
-        System.out.println("mapper.getQuery(42) = " + bs.preparedStatement().getQueryString());
-        assertThat(saved.getWriteTime()).isNotEqualTo(0);
+        // write time should be within 30 seconds.
+        assertThat(saved.getWriteTime()).isGreaterThanOrEqualTo(writeTime).isLessThan(writeTime + 30000000L);
+        assertThat(saved.getTtl()).isNull(); // TTL should be null since it was not set.
+
+        // TODO change to use save Options when JAVA-477 is integrated.
+        session.execute("insert into user (key, v) values (43, 'helloworld') using TTL 600");
+        saved = mapper.get(43);
+        assertThat(saved.getWriteTime()).isGreaterThanOrEqualTo(writeTime).isLessThan(writeTime + 30000000L);
+        assertThat(saved.getTtl()).isGreaterThan(570).isLessThanOrEqualTo(600); // TTL should be within 30 secs.
     }
 
     @Table(name = "user")
@@ -102,6 +107,9 @@ public class MapperSelectFunctionsTest extends CCMBridge.PerClassSingleNodeClust
 
         @Computed(formula = "writetime(\"v\")")
         long writeTime;
+
+        @Computed(formula = "ttl(v)")
+        Integer ttl;
 
         public User() {
         }
@@ -133,6 +141,14 @@ public class MapperSelectFunctionsTest extends CCMBridge.PerClassSingleNodeClust
 
         public void setWriteTime(long pk) {
             this.writeTime = pk;
+        }
+
+        public Integer getTtl() {
+            return this.ttl;
+        }
+
+        public void setTtl(Integer ttl) {
+            this.ttl = ttl;
         }
     }
 
