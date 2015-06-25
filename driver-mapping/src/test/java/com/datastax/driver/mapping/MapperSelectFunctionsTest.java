@@ -48,7 +48,7 @@ public class MapperSelectFunctionsTest extends CCMBridge.PerClassSingleNodeClust
     void should_add_aliases_for_fields_in_select_queries() {
         Mapper<User4> mapper = new MappingManager(session).mapper(User4.class);
         BoundStatement bs = (BoundStatement)mapper.getQuery(42);
-        assertThat(bs.preparedStatement().getQueryString()).contains("SELECT \"key\" AS col1,\"v\" AS col2,writetime(\"v\") AS col3,\"ads\" AS col4");
+        assertThat(bs.preparedStatement().getQueryString()).contains("SELECT", "\"key\" AS col1", "\"v\" AS col2", "writetime(\"v\") AS col3", "\"ads\" AS col4");
     }
 
 
