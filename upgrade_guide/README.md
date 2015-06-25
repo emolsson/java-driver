@@ -3,6 +3,18 @@
 The purpose of this guide is to detail changes made by successive
 versions of the Java driver.
 
+### 2.0.11
+
+
+1. The `DefaultRetryPolicy`'s behaviour has changed in the case of an Unavailable
+   exception received from a request. The new behaviour will cause the driver to
+   process a Retry on a different node at most once, otherwise an exception will
+   be thrown. This change makes sense in the case where the node tried initially
+   for the request happens to be isolated from the rest of the cluster (e.g.
+   because of a network partition) but can still answer to the client normally.
+   In this case, trying another node has a chance of success.
+   The previous behaviour was to always throw an exception.
+
 ### 2.0.x to 2.0.10
 
 We try to avoid breaking changes within a branch (2.0.x to 2.0.y), but
@@ -111,15 +123,6 @@ you have trouble compiling your application after an upgrade.
    provided (and in that case, `getValues()` will contain the values corresponding
    to those markers). If need be, it is possible to force the old behavior by
    using the new `setForceNoValues()` method.
-   
-10. The `DefaultRetryPolicy`'s behaviour have changed in the case of an Unavailable
-    exception received from a request. The new behaviour will cause the driver to
-    process a Retry on a different node at most once, otherwise an exception will 
-    be thrown. This change makes sense in the case where the node tried initially
-    for the request happens to be isolated from the rest of the other nodes 
-    (let's say, because of bad partition of the network) but can still answer to 
-    the client normally, in this case, trying on other node have higher chances
-    of success. The previous behaviour was to always throw an exception.
 
 #### Other API Changes
 
