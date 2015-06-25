@@ -357,7 +357,6 @@ class RequestHandler {
         }
 
         private void retry(final boolean retryCurrent, ConsistencyLevel newConsistencyLevel) {
-
             final Host h = current;
             this.retryConsistencyLevel = newConsistencyLevel;
 
