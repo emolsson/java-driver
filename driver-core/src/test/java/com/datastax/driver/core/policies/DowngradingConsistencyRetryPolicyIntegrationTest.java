@@ -23,8 +23,8 @@ import org.testng.annotations.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.calls;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 import com.datastax.driver.core.*;
 
@@ -33,6 +33,11 @@ import static com.datastax.driver.core.ConsistencyLevel.ONE;
 import static com.datastax.driver.core.ConsistencyLevel.QUORUM;
 import static com.datastax.driver.core.ConsistencyLevel.TWO;
 
+/**
+ * Note: we can't extend {@link AbstractRetryPolicyIntegrationTest} here, because SCassandra doesn't allow custom values for
+ * receivedResponses in primed responses.
+ * If that becomes possible in the future, we could refactor this test.
+ */
 public class DowngradingConsistencyRetryPolicyIntegrationTest {
 
     @Test(groups = "long")
@@ -97,7 +102,7 @@ public class DowngradingConsistencyRetryPolicyIntegrationTest {
         assertThat(actual).isEqualTo(expected);
 
         // If the level was downgraded the policy should have been invoked
-        VerificationMode expectedCallsToPolicy = (expected == requested) ? never() : calls(1);
+        VerificationMode expectedCallsToPolicy = (expected == requested) ? never() : times(1);
         Mockito.verify(retryPolicy, expectedCallsToPolicy).onUnavailable(
             any(Statement.class), any(ConsistencyLevel.class), anyInt(), anyInt(), anyInt());
     }
