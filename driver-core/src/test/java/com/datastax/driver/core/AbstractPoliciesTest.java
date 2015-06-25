@@ -214,19 +214,4 @@ public abstract class AbstractPoliciesTest {
                 addCoordinator(c.session.execute(new SimpleStatement(String.format("SELECT * FROM %s WHERE k = 0", SIMPLE_TABLE)).setRoutingKey(routingKey).setConsistencyLevel(cl)));
         }
     }
-
-    /**
-     * Mock query targeting a Scassandra Cluster.
-     */
-    protected void mockQuery(Session s, int n) {
-        mockQuery(s, n, ConsistencyLevel.ONE);
-    }
-
-    protected void mockQuery(Session s, int n, ConsistencyLevel cl) {
-        ByteBuffer routingKey = ByteBuffer.allocate(4);
-        routingKey.putInt(0, 0);
-        for (int i = 0; i < n; ++i)
-            addCoordinator(s.execute(new SimpleStatement(String.format("mock query")).setRoutingKey(routingKey).setConsistencyLevel(cl)));
-    }
-
 }
