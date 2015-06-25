@@ -102,8 +102,8 @@ public class AbstractRetryPolicyIntegrationTest {
         return ImmutableList.<Map<String, ?>>of(ImmutableMap.of(key, value));
     }
 
-    protected void query() {
-        session.execute("mock query");
+    protected ResultSet query() {
+        return session.execute("mock query");
     }
 
     protected void assertOnReadTimeoutWasCalled(int times) {
