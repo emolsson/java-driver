@@ -17,6 +17,7 @@ package com.datastax.driver.mapping;
 
 import java.util.Collection;
 
+import com.datastax.driver.core.utils.CassandraVersion;
 import com.google.common.collect.Lists;
 import org.testng.annotations.Test;
 
@@ -29,6 +30,7 @@ import com.datastax.driver.mapping.annotations.Table;
 
 import static com.datastax.driver.mapping.Mapper.Option;
 
+@CassandraVersion(major=2.0)
 public class MapperOptionTest extends CCMBridge.PerClassSingleNodeCluster {
 
     @Override
